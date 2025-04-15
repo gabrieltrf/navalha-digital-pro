@@ -52,6 +52,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+        barber: {
+          dark: '#1A1F2C',
+          light: '#FFFFFF',
+          muted: '#8E9196',
+          gold: '#D4AF37',
+          red: '#ea384c',
+          'dark-alt': '#23252F',
+        },
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
