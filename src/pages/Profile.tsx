@@ -192,7 +192,7 @@ const Profile = () => {
           <div className="lg:col-span-2">
             <Card className="bg-barber-dark border border-white/10">
               <CardHeader>
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="w-full bg-barber-dark-alt border border-white/10">
                     <TabsTrigger 
                       value="appointments" 
@@ -213,158 +213,160 @@ const Profile = () => {
                       Avaliações
                     </TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="appointments" className="mt-4 space-y-4">
+                    <h3 className="text-lg font-bold text-white">Próximos Agendamentos</h3>
+                    
+                    {appointments.filter(a => a.status === "upcoming").length === 0 ? (
+                      <div className="text-center py-8">
+                        <CalendarClock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">Você não possui agendamentos futuros.</p>
+                        <Button className="mt-4 bg-primary text-white hover:bg-primary/80" size="sm">
+                          Agendar Agora
+                        </Button>
+                      </div>
+                    ) : (
+                      appointments
+                        .filter(a => a.status === "upcoming")
+                        .map(appointment => (
+                          <Card key={appointment.id} className="bg-barber-dark-alt border border-white/10">
+                            <CardHeader className="pb-2">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <CardTitle className="text-white">{appointment.service}</CardTitle>
+                                  <CardDescription>com {appointment.barber}</CardDescription>
+                                </div>
+                                <Badge className={getStatusColor(appointment.status)}>
+                                  {getStatusText(appointment.status)}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="pb-2">
+                              <div className="flex justify-between items-center text-sm">
+                                <div className="flex items-center gap-2">
+                                  <CalendarClock className="h-4 w-4 text-primary" />
+                                  <span className="text-white">
+                                    {format(appointment.date, "dd 'de' MMMM', ' yyyy", { locale: pt })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-primary" />
+                                  <span className="text-white">
+                                    {format(appointment.date, "HH:mm", { locale: pt })}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                            <CardFooter className="flex justify-between pt-2 border-t border-white/10">
+                              <span className="text-primary font-bold">R$ {appointment.price},00</span>
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" className="border-accent text-accent hover:bg-accent/10">
+                                  Cancelar
+                                </Button>
+                                <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10">
+                                  Reagendar
+                                </Button>
+                              </div>
+                            </CardFooter>
+                          </Card>
+                        ))
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="history" className="mt-4 space-y-4">
+                    <h3 className="text-lg font-bold text-white">Histórico de Agendamentos</h3>
+                    
+                    {appointments.filter(a => a.status !== "upcoming").length === 0 ? (
+                      <div className="text-center py-8">
+                        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">Seu histórico de agendamentos está vazio.</p>
+                      </div>
+                    ) : (
+                      appointments
+                        .filter(a => a.status !== "upcoming")
+                        .map(appointment => (
+                          <Card key={appointment.id} className="bg-barber-dark-alt border border-white/10">
+                            <CardHeader className="pb-2">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <CardTitle className="text-white">{appointment.service}</CardTitle>
+                                  <CardDescription>com {appointment.barber}</CardDescription>
+                                </div>
+                                <Badge className={getStatusColor(appointment.status)}>
+                                  {getStatusText(appointment.status)}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="pb-2">
+                              <div className="flex justify-between items-center text-sm">
+                                <div className="flex items-center gap-2">
+                                  <CalendarClock className="h-4 w-4 text-primary" />
+                                  <span className="text-white">
+                                    {format(appointment.date, "dd 'de' MMMM', ' yyyy", { locale: pt })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-primary" />
+                                  <span className="text-white">
+                                    {format(appointment.date, "HH:mm", { locale: pt })}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                            <CardFooter className="flex justify-between pt-2 border-t border-white/10">
+                              <span className="text-primary font-bold">R$ {appointment.price},00</span>
+                              {appointment.status === "completed" && !reviews.some(r => r.service === appointment.service && format(r.date, "dd/MM/yyyy") === format(appointment.date, "dd/MM/yyyy")) && (
+                                <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10">
+                                  Avaliar
+                                </Button>
+                              )}
+                            </CardFooter>
+                          </Card>
+                        ))
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="reviews" className="mt-4 space-y-4">
+                    <h3 className="text-lg font-bold text-white">Suas Avaliações</h3>
+                    
+                    {reviews.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">Você ainda não fez nenhuma avaliação.</p>
+                      </div>
+                    ) : (
+                      reviews.map(review => (
+                        <Card key={review.id} className="bg-barber-dark-alt border border-white/10">
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <CardTitle className="text-white">{review.service}</CardTitle>
+                                <CardDescription>com {review.barber}</CardDescription>
+                              </div>
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`h-4 w-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} 
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-muted-foreground text-sm italic">"{review.comment}"</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Avaliado em {format(review.date, "dd/MM/yyyy")}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </TabsContent>
                 </Tabs>
               </CardHeader>
               <CardContent>
-                <TabsContent value="appointments" className="mt-0 space-y-4">
-                  <h3 className="text-lg font-bold text-white">Próximos Agendamentos</h3>
-                  
-                  {appointments.filter(a => a.status === "upcoming").length === 0 ? (
-                    <div className="text-center py-8">
-                      <CalendarClock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Você não possui agendamentos futuros.</p>
-                      <Button className="mt-4 bg-primary text-white hover:bg-primary/80" size="sm">
-                        Agendar Agora
-                      </Button>
-                    </div>
-                  ) : (
-                    appointments
-                      .filter(a => a.status === "upcoming")
-                      .map(appointment => (
-                        <Card key={appointment.id} className="bg-barber-dark-alt border border-white/10">
-                          <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-white">{appointment.service}</CardTitle>
-                                <CardDescription>com {appointment.barber}</CardDescription>
-                              </div>
-                              <Badge className={getStatusColor(appointment.status)}>
-                                {getStatusText(appointment.status)}
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pb-2">
-                            <div className="flex justify-between items-center text-sm">
-                              <div className="flex items-center gap-2">
-                                <CalendarClock className="h-4 w-4 text-primary" />
-                                <span className="text-white">
-                                  {format(appointment.date, "dd 'de' MMMM', ' yyyy", { locale: pt })}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-primary" />
-                                <span className="text-white">
-                                  {format(appointment.date, "HH:mm", { locale: pt })}
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-                          <CardFooter className="flex justify-between pt-2 border-t border-white/10">
-                            <span className="text-primary font-bold">R$ {appointment.price},00</span>
-                            <div className="flex gap-2">
-                              <Button variant="outline" size="sm" className="border-accent text-accent hover:bg-accent/10">
-                                Cancelar
-                              </Button>
-                              <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10">
-                                Reagendar
-                              </Button>
-                            </div>
-                          </CardFooter>
-                        </Card>
-                      ))
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="history" className="mt-0 space-y-4">
-                  <h3 className="text-lg font-bold text-white">Histórico de Agendamentos</h3>
-                  
-                  {appointments.filter(a => a.status !== "upcoming").length === 0 ? (
-                    <div className="text-center py-8">
-                      <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Seu histórico de agendamentos está vazio.</p>
-                    </div>
-                  ) : (
-                    appointments
-                      .filter(a => a.status !== "upcoming")
-                      .map(appointment => (
-                        <Card key={appointment.id} className="bg-barber-dark-alt border border-white/10">
-                          <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-white">{appointment.service}</CardTitle>
-                                <CardDescription>com {appointment.barber}</CardDescription>
-                              </div>
-                              <Badge className={getStatusColor(appointment.status)}>
-                                {getStatusText(appointment.status)}
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pb-2">
-                            <div className="flex justify-between items-center text-sm">
-                              <div className="flex items-center gap-2">
-                                <CalendarClock className="h-4 w-4 text-primary" />
-                                <span className="text-white">
-                                  {format(appointment.date, "dd 'de' MMMM', ' yyyy", { locale: pt })}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-primary" />
-                                <span className="text-white">
-                                  {format(appointment.date, "HH:mm", { locale: pt })}
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-                          <CardFooter className="flex justify-between pt-2 border-t border-white/10">
-                            <span className="text-primary font-bold">R$ {appointment.price},00</span>
-                            {appointment.status === "completed" && !reviews.some(r => r.service === appointment.service && format(r.date, "dd/MM/yyyy") === format(appointment.date, "dd/MM/yyyy")) && (
-                              <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary/10">
-                                Avaliar
-                              </Button>
-                            )}
-                          </CardFooter>
-                        </Card>
-                      ))
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="reviews" className="mt-0 space-y-4">
-                  <h3 className="text-lg font-bold text-white">Suas Avaliações</h3>
-                  
-                  {reviews.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Você ainda não fez nenhuma avaliação.</p>
-                    </div>
-                  ) : (
-                    reviews.map(review => (
-                      <Card key={review.id} className="bg-barber-dark-alt border border-white/10">
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <CardTitle className="text-white">{review.service}</CardTitle>
-                              <CardDescription>com {review.barber}</CardDescription>
-                            </div>
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-4 w-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} 
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-muted-foreground text-sm italic">"{review.comment}"</p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Avaliado em {format(review.date, "dd/MM/yyyy")}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </TabsContent>
+                {/* The TabsContent components have been moved inside the Tabs component above */}
               </CardContent>
             </Card>
           </div>
