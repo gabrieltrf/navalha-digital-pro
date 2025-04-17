@@ -1,186 +1,52 @@
-
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scissors, Package, Paintbrush, Ruler, Clock, DollarSign, ArrowRight } from "lucide-react";
+import {
+  Scissors,
+  Package,
+  Paintbrush,
+  Ruler,
+  Clock,
+  DollarSign,
+  ArrowRight,
+} from "lucide-react";
 import { Link } from "react-router-dom";
+import { useServicosPublicos } from "@/hooks/useServicosPublicos";
 
-// Dados das categorias e serviços
+// Categorias fixas
 const categories = [
-  {
-    id: "hair",
-    name: "Cabelo",
-    icon: Scissors,
-  },
-  {
-    id: "beard",
-    name: "Barba",
-    icon: Scissors,
-  },
-  {
-    id: "combo",
-    name: "Combos",
-    icon: Package,
-  },
-  {
-    id: "color",
-    name: "Coloração",
-    icon: Paintbrush,
-  },
-  {
-    id: "extra",
-    name: "Extras",
-    icon: Ruler,
-  },
+  { id: "hair", name: "Cabelo", icon: Scissors },
+  { id: "beard", name: "Barba", icon: Scissors },
+  { id: "combo", name: "Combos", icon: Package },
+  { id: "color", name: "Coloração", icon: Paintbrush },
+  { id: "extra", name: "Extras", icon: Ruler },
 ];
 
-// Serviços detalhados por categoria
-const services = {
-  hair: [
-    {
-      id: 1,
-      name: "Corte Masculino Clássico",
-      description: "Corte tradicional mantendo linhas limpas e um visual elegante.",
-      price: 40,
-      duration: 30,
-      popular: true,
-    },
-    {
-      id: 2,
-      name: "Corte Degradê",
-      description: "Transição perfeita de vários comprimentos com acabamento suave.",
-      price: 45,
-      duration: 35,
-      popular: true,
-    },
-    {
-      id: 3,
-      name: "Corte Navalhado",
-      description: "Realizado com navalha para um visual arrojado e texturizado.",
-      price: 50,
-      duration: 40,
-      popular: false,
-    },
-    {
-      id: 4,
-      name: "Corte Infantil",
-      description: "Dedicado a crianças com atendimento especial e paciência.",
-      price: 35,
-      duration: 25,
-      popular: false,
-    },
-  ],
-  beard: [
-    {
-      id: 5,
-      name: "Barba Completa",
-      description: "Modelagem completa com toalha quente, óleo e finalização perfeita.",
-      price: 35,
-      duration: 25,
-      popular: true,
-    },
-    {
-      id: 6,
-      name: "Barba Simples",
-      description: "Aparagem rápida para manter o formato atual da sua barba.",
-      price: 25,
-      duration: 15,
-      popular: false,
-    },
-    {
-      id: 7,
-      name: "Modelagem de Barba",
-      description: "Criação de linhas e contorno perfeitos para valorizar seu rosto.",
-      price: 30,
-      duration: 20,
-      popular: false,
-    },
-  ],
-  combo: [
-    {
-      id: 8,
-      name: "Combo Clássico (Corte + Barba)",
-      description: "A combinação perfeita para quem busca um visual completo.",
-      price: 65,
-      duration: 50,
-      popular: true,
-      discount: "15% OFF",
-    },
-    {
-      id: 9,
-      name: "Combo VIP (Corte + Barba + Sobrancelha)",
-      description: "Tratamento completo para uma aparência impecável.",
-      price: 85,
-      duration: 65,
-      popular: true,
-      discount: "12% OFF",
-    },
-    {
-      id: 10,
-      name: "Combo Pai e Filho",
-      description: "Corte para você e seu filho com preço especial.",
-      price: 70,
-      duration: 60,
-      popular: false,
-      discount: "10% OFF",
-    },
-  ],
-  color: [
-    {
-      id: 11,
-      name: "Coloração Completa",
-      description: "Coloração total dos cabelos com produtos de alta qualidade.",
-      price: 60,
-      duration: 45,
-      popular: false,
-    },
-    {
-      id: 12,
-      name: "Matização",
-      description: "Para neutralizar tons amarelados ou alaranjados indesejados.",
-      price: 50,
-      duration: 30,
-      popular: false,
-    },
-    {
-      id: 13,
-      name: "Luzes/Mechas",
-      description: "Destaque apenas algumas partes do cabelo para um visual moderno.",
-      price: 80,
-      duration: 60,
-      popular: false,
-    },
-  ],
-  extra: [
-    {
-      id: 14,
-      name: "Design de Sobrancelha",
-      description: "Modelagem precisa para harmonizar o rosto.",
-      price: 25,
-      duration: 15,
-      popular: true,
-    },
-    {
-      id: 15,
-      name: "Hidratação Capilar",
-      description: "Tratamento nutritivo para fortalecer e dar brilho aos fios.",
-      price: 45,
-      duration: 30,
-      popular: false,
-    },
-    {
-      id: 16,
-      name: "Limpeza de Pele Masculina",
-      description: "Cuidado facial para uma pele saudável e sem impurezas.",
-      price: 55,
-      duration: 35,
-      popular: false,
-    },
-  ],
-};
-
 const Services = () => {
+  const servicos = useServicosPublicos();
+
+  // Agrupar serviços por categoria
+  const servicosPorCategoria: Record<string, typeof servicos> = {};
+  servicos.forEach((servico) => {
+    if (!servicosPorCategoria[servico.categoria]) {
+      servicosPorCategoria[servico.categoria] = [];
+    }
+    servicosPorCategoria[servico.categoria].push(servico);
+  });
+
   return (
     <div className="py-20">
       <div className="container">
@@ -199,8 +65,8 @@ const Services = () => {
           <div className="flex justify-center mb-8">
             <TabsList className="bg-barber-dark-alt border border-white/10 p-1">
               {categories.map((category) => (
-                <TabsTrigger 
-                  key={category.id} 
+                <TabsTrigger
+                  key={category.id}
                   value={category.id}
                   className="data-[state=active]:bg-primary data-[state=active]:text-white text-white hover:text-white data-[state=active]:shadow"
                 >
@@ -213,12 +79,12 @@ const Services = () => {
             </TabsList>
           </div>
 
-          {Object.keys(services).map((categoryKey) => (
-            <TabsContent key={categoryKey} value={categoryKey} className="mt-0 animate-fade-in">
+          {categories.map((category) => (
+            <TabsContent key={category.id} value={category.id} className="mt-0 animate-fade-in">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {services[categoryKey as keyof typeof services].map((service) => (
-                  <Card 
-                    key={service.id} 
+                {(servicosPorCategoria[category.id] || []).map((service) => (
+                  <Card
+                    key={service.id}
                     className="bg-barber-dark border border-white/10 hover:border-primary/50 transition-all overflow-hidden group"
                   >
                     {service.popular && (
@@ -229,14 +95,14 @@ const Services = () => {
                       </div>
                     )}
                     <CardHeader>
-                      <CardTitle className="text-white">{service.name}</CardTitle>
-                      <CardDescription>{service.description}</CardDescription>
+                      <CardTitle className="text-white">{service.nome}</CardTitle>
+                      <CardDescription>{service.descricao}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">{service.duration} min</span>
+                          <span className="text-sm text-muted-foreground">{service.duracao} min</span>
                         </div>
                         <div className="flex items-center gap-1">
                           {service.discount && (
@@ -247,7 +113,7 @@ const Services = () => {
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-4 w-4 text-primary" />
                             <span className="text-xl font-bold text-primary">
-                              {service.price},00
+                              {service.preco},00
                             </span>
                           </div>
                         </div>
@@ -280,7 +146,7 @@ const Services = () => {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-barber-dark-alt border border-white/10">
             <CardHeader>
               <CardTitle className="text-white">Formas de Pagamento</CardTitle>
@@ -292,7 +158,7 @@ const Services = () => {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-barber-dark-alt border border-white/10">
             <CardHeader>
               <CardTitle className="text-white">Horário de Funcionamento</CardTitle>
