@@ -13,6 +13,8 @@ import BarberDashboard from "./pages/BarberDashboard";
 import NotFound from "./pages/NotFound";
 import { ListaServicos } from "@/pages/admin/ListaServicos";
 import { EditarServico } from "@/pages/admin/EditarServico";
+import FirebaseSeeder from "./components/FirebaseSeeder";
+import SuccessPage from "./components/SuccessPage";
 
 // Defina o tema escuro como padrão
 document.documentElement.classList.add("dark");
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/admin/add" element={<AdicionarServico />} />
             <Route path="/admin/edit" element={<EditarServico />} />
             <Route path="/admin/list" element={<ListaServicos />} />
+            <Route path="/admin/feeder" element={<FirebaseSeeder />} />
+            <Route path="/agendamento/sucesso" element={<SuccessPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           </Route>
           <Route path="*" element={<NotFound />} />

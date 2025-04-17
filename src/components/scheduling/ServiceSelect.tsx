@@ -1,4 +1,4 @@
-
+//navalha-digital-pro/src/components/scheduling/ServiceSelect.tsx
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scissors, Package, Paintbrush, Ruler } from "lucide-react";

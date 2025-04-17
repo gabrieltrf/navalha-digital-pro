@@ -165,7 +165,7 @@ const Services = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Segunda a Sábado: 9h às 20h<br />
+                Terça a Sábado: 9h às 20h<br />
                 Domingos: 10h às 16h<br />
                 Feriados: Consulte o app
               </p>

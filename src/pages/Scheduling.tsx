@@ -12,6 +12,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
+import { agendarServico } from "@/components/agendamentos";
+import { useNavigate } from "react-router-dom";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/firebase"; // ajuste se necessário
+import { toast } from "@/components/ui/use-toast";
+import { addMinutes, isBefore, isAfter, parse } from "date-fns";
+import { isTimeAvailable } from "@/components/isTimeAvailable"; // ou onde estiver sua função de verificação
+
+
+
 
 const Scheduling = () => {
   const { toast } = useToast();
@@ -71,12 +81,58 @@ const Scheduling = () => {
     setSelectedBarber(barber);
   };
 
-  const handleConfirmBooking = () => {
-    toast({
-      title: "Agendamento confirmado!",
-      description: "Seu horário foi agendado com sucesso. Você receberá uma confirmação por e-mail.",
-      variant: "default",
-    });
+      const navigate = useNavigate();
+
+      const handleConfirmBooking = async () => {
+        // Checar campos obrigatórios
+        if (!selectedBarber || !selectedDate || !selectedTime || !selectedService) return;
+      
+        const duration = selectedService.duration ?? 30; // fallback caso não tenha duração definida
+        const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      
+        const isAvailable = await isTimeAvailable(
+          selectedBarber.id,
+          selectedDate,
+          selectedTime,
+          duration
+        );
+      
+        if (!isAvailable) {
+          toast({
+            title: "Horário indisponível",
+            description: "O horário selecionado já está agendado ou conflita com outro.",
+            variant: "destructive",
+          });
+          return;
+        }
+      
+        try {
+          // Combina data e hora no formato ISO (para salvar no Firebase ou backend)
+          const dataHoraISO = `${formattedDate}T${selectedTime}`;
+      
+          await agendarServico({
+            id_cliente: "cliente123", // Substitua pelo ID real do cliente
+            id_barbeiro: selectedBarber.id,
+            id_servico: selectedService.id,
+            data_hora: dataHoraISO,
+          });
+      
+          toast({
+            title: "Agendamento confirmado!",
+            description: `Você agendou para ${formattedDate} às ${selectedTime}.`,
+          });
+      
+          navigate("/agendamento/sucesso"); // redireciona após confirmar
+        } catch (error) {
+          console.error("Erro ao agendar:", error);
+          toast({
+            title: "Erro ao agendar.",
+            description: "Tente novamente mais tarde.",
+            variant: "destructive",
+          });
+        }
+      };
+  const handleSelectDate = (date: Date) => {
     
     // Aqui você faria a lógica para salvar o agendamento no banco de dados
     // E depois redirecionaria para uma página de confirmação ou perfil
@@ -355,6 +411,5 @@ const Scheduling = () => {
       </div>
     </div>
   );
-};
-
+}
 export default Scheduling;
