@@ -19,7 +19,7 @@ import { db } from "@/firebase"; // ajuste se necessário
 import { toast } from "@/components/ui/use-toast";
 import { addMinutes, isBefore, isAfter, parse } from "date-fns";
 import { isTimeAvailable } from "@/components/isTimeAvailable"; // ou onde estiver sua função de verificação
-
+import { ptBR } from "date-fns/locale";
 
 
 
@@ -253,9 +253,11 @@ const Scheduling = () => {
               <TabsContent value="datetime" className="mt-0">
                 <DateTimeSelect 
                   selectedDate={selectedDate}
+                  setSelectedDate={setSelectedDate} // ✅ certo
                   selectedTime={selectedTime}
-                  onSelectDate={setSelectedDate}
-                  onSelectTime={setSelectedTime}
+                  setSelectedTime={setSelectedTime} // ✅ certo
+                  selectedBarber={selectedBarber}
+                  selectedService={selectedService}
                 />
                 <div className="flex justify-between mt-6">
                   <Button 
@@ -299,80 +301,88 @@ const Scheduling = () => {
               </TabsContent>
 
               <TabsContent value="confirm" className="mt-0">
-                <div className="w-full">
-                  <h2 className="text-xl font-bold text-white mb-4">Confirme seu Agendamento</h2>
-                  
-                  <Card className="bg-barber-dark-alt border border-white/10 mb-6">
-                    <CardHeader>
-                      <CardTitle className="text-white text-lg">Resumo do Agendamento</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {selectedService && (
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-primary/10 p-2 rounded-full">
-                              <Scissors className="h-4 w-4 text-primary" />
+                  <div className="w-full">
+                    <h2 className="text-xl font-bold text-white mb-4">Confirme seu Agendamento</h2>
+                    
+                    <Card className="bg-barber-dark-alt border border-white/10 mb-6">
+                      <CardHeader>
+                        <CardTitle className="text-white text-lg">Resumo do Agendamento</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+
+                        {/* Serviço Selecionado */}
+                        {selectedService && (
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-primary/10 p-2 rounded-full">
+                                <Scissors className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-white">{selectedService.nome}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {selectedService.duracao} minutos
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-white">{selectedService.name}</p>
-                              <p className="text-xs text-muted-foreground">{selectedService.duration} minutos</p>
+                            <span className="text-primary font-bold">
+                              R$ {selectedService.preco},00
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Barbeiro Selecionado */}
+                        {selectedBarber && (
+                          <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full overflow-hidden">
+                                <img
+                                  src={selectedBarber.imagem}
+                                  alt={selectedBarber.nome}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <p className="text-white">{selectedBarber.nome}</p>
                             </div>
                           </div>
-                          <span className="text-primary font-bold">R$ {selectedService.price},00</span>
-                        </div>
-                      )}
-                      
-                      {selectedBarber && (
-                        <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full overflow-hidden">
-                              <img 
-                                src={selectedBarber.image} 
-                                alt={selectedBarber.name} 
-                                className="w-full h-full object-cover"
-                              />
+                        )}
+
+                        {/* Data e Hora */}
+                        {selectedDate && selectedTime && (
+                          <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-primary/10 p-2 rounded-full">
+                                <Store className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-white">
+                                  {format(selectedDate, "dd 'de' MMMM', ' yyyy", { locale: ptBR })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{selectedTime}</p>
+                              </div>
                             </div>
-                            <p className="text-white">{selectedBarber.name}</p>
                           </div>
-                        </div>
-                      )}
-                      
-                      {selectedDate && selectedTime && (
-                        <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-primary/10 p-2 rounded-full">
-                              <Store className="h-4 w-4 text-primary" />
-                            </div>
-                            <div>
+                        )}
+                        
+                        {/* Pagamento */}
+                        {selectedPayment && (
+                          <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-primary/10 p-2 rounded-full">
+                                {selectedPayment === "card" && <CreditCard className="h-4 w-4 text-primary" />}
+                                {selectedPayment === "cash" && <DollarSign className="h-4 w-4 text-primary" />}
+                                {selectedPayment === "pix" && <QrCode className="h-4 w-4 text-primary" />}
+                              </div>
                               <p className="text-white">
-                                {format(selectedDate, "dd 'de' MMMM', ' yyyy", { locale: pt })}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {selectedTime}
+                                {selectedPayment === "card" && "Cartão de Crédito/Débito"}
+                                {selectedPayment === "cash" && "Dinheiro"}
+                                {selectedPayment === "pix" && "PIX"}
                               </p>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {selectedPayment && (
-                        <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-primary/10 p-2 rounded-full">
-                              {selectedPayment === "card" && <CreditCard className="h-4 w-4 text-primary" />}
-                              {selectedPayment === "cash" && <DollarSign className="h-4 w-4 text-primary" />}
-                              {selectedPayment === "pix" && <QrCode className="h-4 w-4 text-primary" />}
-                            </div>
-                            <p className="text-white">
-                              {selectedPayment === "card" && "Cartão de Crédito/Débito"}
-                              {selectedPayment === "cash" && "Dinheiro"}
-                              {selectedPayment === "pix" && "PIX"}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                        )}
+
+                      </CardContent>
+                    </Card>
                   
                   <div className="flex items-center gap-2 mb-6">
                     <MapPin className="h-5 w-5 text-primary" />

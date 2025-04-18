@@ -15,6 +15,8 @@ import { ListaServicos } from "@/pages/admin/ListaServicos";
 import { EditarServico } from "@/pages/admin/EditarServico";
 import FirebaseSeeder from "./components/FirebaseSeeder";
 import SuccessPage from "./components/SuccessPage";
+import AdminAgendamentos from "./pages/admin/AdminAgendamentos";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 // Defina o tema escuro como padrão
 document.documentElement.classList.add("dark");
@@ -40,6 +42,11 @@ const App = () => (
             <Route path="/admin/list" element={<ListaServicos />} />
             <Route path="/admin/feeder" element={<FirebaseSeeder />} />
             <Route path="/agendamento/sucesso" element={<SuccessPage />} />
+            <Route path="/admin/agendamentos" element={<AdminAgendamentos />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           </Route>
           <Route path="*" element={<NotFound />} />

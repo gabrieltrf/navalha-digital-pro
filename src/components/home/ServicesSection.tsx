@@ -39,7 +39,7 @@ export function ServicesSection() {
                   <div className="bg-primary/10 p-4 rounded-full inline-flex">
                     <Icon className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-white mt-4">{servico.nome}</CardTitle>
+                  <CardTitle className="text-white mt-4 ">{servico.nome}</CardTitle>
                   <CardDescription className="text-muted-foreground">
                     {servico.descricao}
                   </CardDescription>

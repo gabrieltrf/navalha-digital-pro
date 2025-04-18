@@ -1,129 +1,155 @@
-//C:\projetos\App Barbearia\navalha-digital-pro\src\components\scheduling\DateTimeSelect.tsx
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon, Clock } from "lucide-react";
-import { format } from "date-fns";
-import { pt } from "date-fns/locale";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+// src/components/scheduling/DateTimeSelect.tsx
+import { useEffect, useState } from "react";
+import { format, addMinutes, isBefore } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { db } from "@/firebase";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 
-// Horários disponíveis (exemplo)
-const availableTimeSlots = [
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-  "17:30",
-  "18:00",
-  "18:30",
-  "19:00",
-];
-
-type DateTimeSelectProps = {
-  selectedDate: Date | undefined;
+interface DateTimeSelectProps {
+  selectedDate: Date | null;
+  setSelectedDate: (date: Date | null) => void;
   selectedTime: string | null;
-  onSelectDate: (date: Date | undefined) => void;
-  onSelectTime: (time: string | null) => void;
-};
+  setSelectedTime: (time: string | null) => void;
+  selectedBarber: any;
+  selectedService: any;
+}
 
 export function DateTimeSelect({
   selectedDate,
+  setSelectedDate,
   selectedTime,
-  onSelectDate,
-  onSelectTime,
+  setSelectedTime,
+  selectedBarber,
+  selectedService,
 }: DateTimeSelectProps) {
-  const today = new Date();
-  const oneMonthFromNow = new Date(today);
-  oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchAvailableTimes = async () => {
+      if (!selectedDate || !selectedBarber || !selectedService) return;
+
+      const weekdayMap = [
+        "domingo",
+        "segunda",
+        "terca",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sabado",
+      ];
+      const dayKey = weekdayMap[selectedDate.getDay()];  // 0 = domingo ... 6 = sabado
+      
+      const barberSnap = await getDoc(doc(db, "barbeiros", selectedBarber.id));
+      const barberData = barberSnap.data();
+      
+      // se não existir horários configurados para esse dia
+      if (!barberData?.horarios?.[dayKey]) {
+        setAvailableTimes([]);
+        return;
+      }
+      
+      const { inicio, fim } = barberData.horarios[dayKey];
+
+      if (!inicio || !fim) {
+        setAvailableTimes([]);
+        return;
+      }
+
+      const [startHour, startMinute] = inicio.split(":").map(Number);
+      const [endHour, endMinute] = fim.split(":").map(Number);
+      const duration = selectedService.duracao || 30;
+
+      const startDate = new Date(selectedDate);
+      startDate.setHours(startHour, startMinute, 0, 0);
+
+      const endDate = new Date(selectedDate);
+      endDate.setHours(endHour, endMinute, 0, 0);
+
+      // Pega os agendamentos existentes
+      const q = query(
+        collection(db, "agendamentos"),
+        where("id_barbeiro", "==", selectedBarber.id),
+        where("data_hora", ">=", startDate),
+        where("data_hora", "<=", endDate)
+      );
+      const snapshot = await getDocs(q);
+
+      const agendamentos = snapshot.docs.map((doc) => doc.data().data_hora.toDate());
+
+      const times: string[] = [];
+      let currentTime = new Date(startDate);
+
+      while (isBefore(currentTime, endDate)) {
+        const endSlot = addMinutes(currentTime, duration);
+
+        const overlapping = agendamentos.some((agendamento) => {
+          const agendamentoEnd = addMinutes(agendamento, duration);
+          return (
+            currentTime < agendamentoEnd &&
+            endSlot > agendamento // Sobreposição
+          );
+        });
+
+        if (!overlapping && isBefore(endSlot, endDate)) {
+          times.push(format(currentTime, "HH:mm"));
+        }
+
+        currentTime = addMinutes(currentTime, duration);
+      }
+
+      setAvailableTimes(times);
+    };
+
+    fetchAvailableTimes();
+  }, [selectedDate, selectedBarber, selectedService]);
 
   return (
-    <div className="w-full">
-      <h2 className="text-xl font-bold text-white mb-4">Selecione a Data e Horário</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Seletor de Data */}
-        <Card className="bg-barber-dark-alt border border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5 text-primary" />
-              Data
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal border-white/20 hover:bg-white/5 hover:text-white",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                  {selectedDate ? (
-                    format(selectedDate, "PPP", { locale: pt })
-                  ) : (
-                    <span>Selecione uma data</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border-white/20 bg-barber-dark-alt">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={onSelectDate}
-                  disabled={(date) => 
-                    date < today || date > oneMonthFromNow || date.getDay() === 0 // Domingo fechado
-                  }
-                  initialFocus
-                  className="bg-barber-dark-alt text-white pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </CardContent>
-        </Card>
-        
-        {/* Seletor de Horário */}
-        <Card className="bg-barber-dark-alt border border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Horário
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-2">
-              {availableTimeSlots.map((time) => (
-                <Button
-                  key={time}
-                  variant="outline"
-                  className={cn(
-                    "border-white/20 hover:bg-primary/20 hover:text-white",
-                    selectedTime === time
-                      ? "bg-primary/20 text-white border-primary"
-                      : "text-muted-foreground"
-                  )}
-                  onClick={() => onSelectTime(time)}
-                  disabled={!selectedDate}
-                >
-                  {time}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-4">
+      <div>
+        <label className="text-white block mb-2">Data</label>
+        <input
+          type="date"
+          className="p-2 rounded bg-white text-black"
+          value={selectedDate ? format(selectedDate, "yyyy-MM-dd") : ""}
+          onChange={(e) => {
+            const [year, month, day] = e.target.value.split("-").map(Number);
+            const localDate = new Date(year, month - 1, day, 12); // força 12h para evitar problemas de fuso
+            setSelectedDate(localDate);
+          }}
+        />
       </div>
+
+      {availableTimes.length > 0 && (
+        <div>
+          <label className="text-white block mb-2">Horário</label>
+          <div className="grid grid-cols-3 gap-2">
+            {availableTimes.map((time) => (
+              <button
+                key={time}
+                onClick={() => setSelectedTime(time)}
+                className={`px-4 py-2 rounded ${
+                  selectedTime === time
+                    ? "bg-primary text-white"
+                    : "bg-white text-black"
+                }`}
+              >
+                {time}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {availableTimes.length === 0 && selectedDate && (
+        <p className="text-red-500">Nenhum horário disponível para esta data.</p>
+      )}
     </div>
   );
 }
